@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMFT</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#333333">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #333333;
+      color: #ffffff;
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 800;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      padding: 1vmin;
+      gap: 1vmin;
+    }
+
+    .row {
+      display: flex;
+      flex: 1;
+      height: calc(25vh - 1.5vmin);
+      gap: 1vmin;
+      align-items: center;
+    }
+
+    .col-input {
+      flex: 1.25;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5vmin;
+    }
+
+    .app-select {
+      background-color: #222222;
+      color: #ffffff;
+      border: 2px solid #444444;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .app-select:focus {
+      border-color: #0088ff;
+      background-color: #1a1a1a;
+    }
+
+    .app-select:disabled {
+      background-color: #181818;
+      border-color: #333333;
+      color: #777777;
+      cursor: not-allowed;
+    }
+
+    .select-pilot {
+      width: 100%;
+      flex: 2;
+      padding: 0 1rem;
+      font-size: clamp(1.5rem, 8vh, 4.0rem);
+    }
+
+    .sub-controls-row {
+      display: flex;
+      flex: 1;
+      gap: 0.5vmin;
+      width: 100%;
+    }
+
+    .select-class {
+      flex: 1.5;
+      font-size: clamp(0.8rem, 5.0vh, 3.0rem);
+      padding: 0 0.5rem;
+    }
+
+    .select-flight {
+      flex: 1;
+      font-size: clamp(0.8rem, 5.0vh, 3.0rem);
+      padding: 0 0.5rem;
+    }
+
+    .save-btn {
+      flex: 1.2;
+      background-color: #666666;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: clamp(0.8rem, 1.8vh, 1.2rem);
+      cursor: pointer;
+      transition: background-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .save-btn:hover:not(:disabled) {
+      background-color: #0066cc;
+    }
+
+    .save-btn:disabled {
+      background-color: #444444;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .col-stopwatch {
+      flex: 2;
+      height: 100%;
+      position: relative;
+      background-color: #262626;
+      border: 2px solid #444444;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.2s ease;
+    }
+
+    .col-stopwatch:hover:not(.disabled) {
+      border-color: #666666;
+    }
+
+    .col-stopwatch.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    #sw-card-1.running { background-color: #d32f2f; border-color: #b71c1c; color: #ffffff; }
+    #sw-card-2.running { background-color: #2e7d32; border-color: #1b5e20; color: #ffffff; }
+    #sw-card-3.running { background-color: #3399cc; border-color: #2578a3; color: #ffffff; }
+    #sw-card-4.running { background-color: #fbc02d; border-color: #f57f17; color: #000000; }
+
+    .sw-display {
+      font-family: monospace, 'Roboto', sans-serif;
+      font-weight: 800;
+      font-size: calc((100vh / 4) * 0.85);
+      line-height: 1;
+      letter-spacing: 2px;
+      color: inherit;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .reset-btn {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      background-color: #444444;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.4rem 0.8rem;
+      font-family: inherit;
+      font-size: clamp(0.75rem, 1.5vh, 1.2rem);
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 10;
+      transition: background-color 0.2s ease, opacity 0.2s ease;
+      pointer-events: auto;
+    }
+
+    .reset-btn:hover:not(:disabled) { background-color: #d32f2f; }
+    .reset-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .row-key-hint {
+      position: absolute;
+      top: 0.8rem;
+      left: 0.8rem;
+      background-color: rgba(0, 0, 0, 0.25);
+      color: inherit;
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      font-size: clamp(0.75rem, 1.5vh, 1.1rem);
+      pointer-events: none;
+    }
+
+    .floating-cog {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 3.5rem;
+      height: 3.5rem;
+      background-color: #444444;
+      border: 2px solid #666666;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .floating-cog:hover:not(.disabled) {
+      background-color: #0088ff;
+      transform: rotate(30deg);
+    }
+
+    .floating-cog.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .cog-icon {
+      width: 2rem;
+      height: 2rem;
+      fill: #ffffff;
+    }
+
+    #file-input { display: none; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 200;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    .modal-content {
+      background-color: #222222;
+      border: 2px solid #444444;
+      border-radius: 12px;
+      width: 90vw;
+      max-width: 950px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 1.2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #444444;
+      padding-bottom: 0.8rem;
+    }
+
+    .modal-title-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      color: #0088ff;
+    }
+
+    .modal-subtitle {
+      font-size: 1rem;
+      color: #aaa;
+    }
+
+    .close-btn {
+      background-color: #d32f2f;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 1rem;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .modal-action-btn {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      background-color: #444444;
+      color: #ffffff;
+      border: 2px solid #666666;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .modal-action-btn:hover {
+      background-color: #0088ff;
+      border-color: #00aaff;
+    }
+
+    .results-container {
+      background-color: #1a1a1a;
+      border: 1px solid #444444;
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .class-results-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .class-title {
+      font-size: 1.2rem;
+      color: #ffaa00;
+      border-bottom: 1px solid #333333;
+      padding-bottom: 0.3rem;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .results-table th, .results-table td {
+      border: 1px solid #333333;
+      padding: 0.5rem 0.8rem;
+      text-align: center;
+    }
+
+    .results-table th {
+      background-color: #262626;
+      color: #0088ff;
+    }
+
+    .results-table td.pilot-name-cell { text-align: left; }
+    .results-table td.total-cell { font-weight: 900; color: #00ff88; }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Row 1 -->
+    <div class="row">
+      <div class="col-input">
+        <select class="app-select select-pilot" id="pilot-1" onchange="validateRowSelection(1)"><option value="">-</option></select>
+        <div class="sub-controls-row">
+          <select class="app-select select-class" id="class-1" onchange="onClassChange(1)"><option value="">-</option></select>
+          <select class="app-select select-flight" id="flight-1" onchange="validateRowSelection(1)"><option value="">-</option></select>
+          <button class="save-btn" id="save-1" onclick="saveFlight(1)" disabled>GUARDAR</button>
+        </div>
+      </div>
+      <div class="col-stopwatch disabled" id="sw-card-1" onclick="toggleStopwatch(1)">
+        <span class="row-key-hint">[1]</span>
+        <button class="reset-btn" id="reset-1" onclick="event.stopPropagation(); resetStopwatch(1);">RESET</button>
+        <div class="sw-display" id="display-1">00:00.0</div>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="row">
+      <div class="col-input">
+        <select class="app-select select-pilot" id="pilot-2" onchange="validateRowSelection(2)"><option value="">-</option></select>
+        <div class="sub-controls-row">
+          <select class="app-select select-class" id="class-2" onchange="onClassChange(2)"><option value="">-</option></select>
+          <select class="app-select select-flight" id="flight-2" onchange="validateRowSelection(2)"><option value="">-</option></select>
+          <button class="save-btn" id="save-2" onclick="saveFlight(2)" disabled>GUARDAR</button>
+        </div>
+      </div>
+      <div class="col-stopwatch disabled" id="sw-card-2" onclick="toggleStopwatch(2)">
+        <span class="row-key-hint">[2]</span>
+        <button class="reset-btn" id="reset-2" onclick="event.stopPropagation(); resetStopwatch(2);">RESET</button>
+        <div class="sw-display" id="display-2">00:00.0</div>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="row">
+      <div class="col-input">
+        <select class="app-select select-pilot" id="pilot-3" onchange="validateRowSelection(3)"><option value="">-</option></select>
+        <div class="sub-controls-row">
+          <select class="app-select select-class" id="class-3" onchange="onClassChange(3)"><option value="">-</option></select>
+          <select class="app-select select-flight" id="flight-3" onchange="validateRowSelection(3)"><option value="">-</option></select>
+          <button class="save-btn" id="save-3" onclick="saveFlight(3)" disabled>GUARDAR</button>
+        </div>
+      </div>
+      <div class="col-stopwatch disabled" id="sw-card-3" onclick="toggleStopwatch(3)">
+        <span class="row-key-hint">[3]</span>
+        <button class="reset-btn" id="reset-3" onclick="event.stopPropagation(); resetStopwatch(3);">RESET</button>
+        <div class="sw-display" id="display-3">00:00.0</div>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="row">
+      <div class="col-input">
+        <select class="app-select select-pilot" id="pilot-4" onchange="validateRowSelection(4)"><option value="">-</option></select>
+        <div class="sub-controls-row">
+          <select class="app-select select-class" id="class-4" onchange="onClassChange(4)"><option value="">-</option></select>
+          <select class="app-select select-flight" id="flight-4" onchange="validateRowSelection(4)"><option value="">-</option></select>
+          <button class="save-btn" id="save-4" onclick="saveFlight(4)" disabled>GUARDAR</button>
+        </div>
+      </div>
+      <div class="col-stopwatch disabled" id="sw-card-4" onclick="toggleStopwatch(4)">
+        <span class="row-key-hint">[4]</span>
+        <button class="reset-btn" id="reset-4" onclick="event.stopPropagation(); resetStopwatch(4);">RESET</button>
+        <div class="sw-display" id="display-4">00:00.0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="floating-cog" id="cog-btn" onclick="openConfigModal()">
+    <svg class="cog-icon" viewBox="0 0 24 24">
+      <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/>
+    </svg>
+  </div>
+  <input type="file" id="file-input" accept=".json" onchange="handleFileImport(event)">
+
+  <div class="modal-overlay hidden" id="config-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <h2 class="modal-title">
+            IMFT
+            <span id="app-version-display" style="font-size: 1.0rem; color: #888;">(cargando...)</span>
+          </h2>
+          <h3 class="modal-title">Configuración y Resultados</h3>
+          <span class="modal-subtitle" id="contest-title-display">Concurso: -</span>
+          <div id="update-banner" class="hidden" style="margin-top: 0.5rem;">
+            <button class="modal-action-btn" style="background-color: #ffaa00; color: #000;" onclick="applyAppUpdate()">NUEVA VERSIÓN DISPONIBLE</button>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeConfigModal()">CERRAR</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-actions">
+          <button class="modal-action-btn" onclick="triggerImportJSON()">Importar Concurso (JSON)</button>
+          <button class="modal-action-btn" onclick="exportResultsJSON()">Exportar Resultados (JSON)</button>
+        </div>
+        <div class="results-container" id="results-view"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTO_BLUR_TIMEOUT_MS = 5000;
+    const TOTAL_SW = 4;
+    const DB_NAME = 'IndoorFlightTimerDB';
+    const DB_VERSION = 2;
+
+    let db = null;
+    let cachedPilots = [];
+    let cachedClasses = [];
+    let contestName = "";
+
+    const stopwatches = {};
+    for (let i = 1; i <= TOTAL_SW; i++) {
+      stopwatches[i] = {
+        startTime: 0,
+        elapsedTime: 0,
+        timerInterval: null,
+        isRunning: false
+      };
+    }
+
+    let inputBlurTimer = null;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const dbRef = e.target.result;
+          if (!dbRef.objectStoreNames.contains('pilots')) {
+            dbRef.createObjectStore('pilots', { keyPath: 'id' });
+          }
+          if (!dbRef.objectStoreNames.contains('classes')) {
+            dbRef.createObjectStore('classes', { keyPath: 'code' });
+          }
+          if (!dbRef.objectStoreNames.contains('flights')) {
+            dbRef.createObjectStore('flights', { keyPath: 'id', autoIncrement: true });
+          }
+          if (!dbRef.objectStoreNames.contains('metadata')) {
+            dbRef.createObjectStore('metadata', { keyPath: 'key' });
+          }
+        };
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          resolve(db);
+        };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function loadDataFromDB() {
+      if (!db) return;
+      const tx = db.transaction(['pilots', 'classes', 'metadata'], 'readonly');
+      const pilotStore = tx.objectStore('pilots');
+      const classStore = tx.objectStore('classes');
+      const metaStore = tx.objectStore('metadata');
+
+      cachedPilots = await new Promise(res => pilotStore.getAll().onsuccess = e => res(e.target.result));
+      cachedClasses = await new Promise(res => classStore.getAll().onsuccess = e => res(e.target.result));
+      const metaObj = await new Promise(res => metaStore.get('contestName').onsuccess = e => res(e.target.result));
+      contestName = metaObj ? metaObj.value : "";
+
+      document.getElementById('contest-title-display').textContent = contestName ? `Concurso: ${contestName}` : 'Concurso: -';
+      populateAllDropdowns();
+    }
+
+    function formatPilotName(pilot) {
+      if (!pilot) return '';
+      const lastName = pilot.lastName || '';
+      const surNameInitial = pilot.surName ? ` ${pilot.surName.charAt(0)}.` : '';
+      return `${lastName}${surNameInitial}`;
+    }
+
+    function populateAllDropdowns() {
+      for (let i = 1; i <= TOTAL_SW; i++) {
+        const classSelect = document.getElementById(`class-${i}`);
+        const currentVal = classSelect.value;
+        classSelect.innerHTML = '<option value="">-</option>';
+        cachedClasses.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.code;
+          opt.textContent = `${c.name}`;
+          classSelect.appendChild(opt);
+        });
+        classSelect.value = currentVal;
+        onClassChange(i);
+      }
+    }
+
+    function onClassChange(rowIndex) {
+      const classCode = document.getElementById(`class-${rowIndex}`).value;
+      const pilotSelect = document.getElementById(`pilot-${rowIndex}`);
+      const flightSelect = document.getElementById(`flight-${rowIndex}`);
+
+      pilotSelect.innerHTML = '<option value="">-</option>';
+      flightSelect.innerHTML = '<option value="">-</option>';
+
+      if (classCode) {
+        const classObj = cachedClasses.find(c => c.code === classCode);
+        if (classObj) {
+          const classPilots = cachedPilots.filter(p => classObj.pilotIds.includes(p.id));
+          classPilots.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = formatPilotName(p);
+            pilotSelect.appendChild(opt);
+          });
+
+          for (let f = 1; f <= classObj.maxFlights; f++) {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = `${f}`;
+            flightSelect.appendChild(opt);
+          }
+        }
+      }
+      validateRowSelection(rowIndex);
+    }
+
+    function validateRowSelection(rowIndex) {
+      const classVal = document.getElementById(`class-${rowIndex}`).value;
+      const pilotVal = document.getElementById(`pilot-${rowIndex}`).value;
+      const flightVal = document.getElementById(`flight-${rowIndex}`).value;
+      const swCard = document.getElementById(`sw-card-${rowIndex}`);
+
+      if (classVal && pilotVal && flightVal) {
+        swCard.classList.remove('disabled');
+      } else {
+        swCard.classList.add('disabled');
+      }
+      updateSaveButtonState(rowIndex);
+    }
+
+    function updateSaveButtonState(rowIndex) {
+      const sw = stopwatches[rowIndex];
+      const saveBtn = document.getElementById(`save-${rowIndex}`);
+      const classVal = document.getElementById(`class-${rowIndex}`).value;
+      const pilotVal = document.getElementById(`pilot-${rowIndex}`).value;
+      const flightVal = document.getElementById(`flight-${rowIndex}`).value;
+
+      if (!sw.isRunning && sw.elapsedTime > 0 && classVal && pilotVal && flightVal) {
+        saveBtn.disabled = false;
+      } else {
+        saveBtn.disabled = true;
+      }
+    }
+
+    function setRowInputControlsState(rowIndex, disabled) {
+      document.getElementById(`class-${rowIndex}`).disabled = disabled;
+      document.getElementById(`pilot-${rowIndex}`).disabled = disabled;
+      document.getElementById(`flight-${rowIndex}`).disabled = disabled;
+      updateSaveButtonState(rowIndex);
+    }
+
+    function findExistingFlightRecord(classCode, pilotId, flightNum) {
+      return new Promise((resolve) => {
+        const tx = db.transaction(['flights'], 'readonly');
+        const store = tx.objectStore('flights');
+        let found = null;
+        const req = store.openCursor();
+        req.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            const record = cursor.value;
+            if (record.classCode === classCode && record.pilotId === pilotId && record.flightNum === flightNum) {
+              found = record;
+              resolve(found);
+              return;
+            }
+            cursor.continue();
+          } else {
+            resolve(found);
+          }
+        };
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    async function saveFlight(rowIndex) {
+      const classCode = document.getElementById(`class-${rowIndex}`).value;
+      const pilotId = parseInt(document.getElementById(`pilot-${rowIndex}`).value, 10);
+      const flightNum = parseInt(document.getElementById(`flight-${rowIndex}`).value, 10);
+      const sw = stopwatches[rowIndex];
+
+      if (!classCode || !pilotId || !flightNum) {
+        alert('Elegir clase, piloto y vuelo antes de guardar.');
+        return;
+      }
+
+      if (sw.elapsedTime === 0) {
+        alert('El crono está en 0.');
+        return;
+      }
+
+      const existingRecord = await findExistingFlightRecord(classCode, pilotId, flightNum);
+
+      if (existingRecord) {
+        const confirmReplace = confirm(
+          `Ya existe un tiempo guardado para este vuelo (${formatTimeSec(existingRecord.durationMs)}).\n¿Desea reemplazarlo con ${formatTimeSec(sw.elapsedTime)}?`
+        );
+        if (!confirmReplace) {
+          return;
+        }
+      }
+
+      const flightRecord = {
+        classCode: classCode,
+        pilotId: pilotId,
+        flightNum: flightNum,
+        durationMs: sw.elapsedTime,
+        timestamp: Date.now()
+      };
+
+      if (existingRecord) {
+        flightRecord.id = existingRecord.id;
+      }
+
+      const tx = db.transaction(['flights'], 'readwrite');
+      tx.objectStore('flights').put(flightRecord);
+
+      tx.oncomplete = () => {
+        alert(`Vuelo registrado: ${formatTime(sw.elapsedTime)}`);
+      };
+      tx.onerror = () => {
+        alert('Error al registrar vuelo.');
+      };
+    }
+
+    function openConfigModal() {
+      const hasRunningTimer = Object.values(stopwatches).some(sw => sw.isRunning);
+      if (hasRunningTimer) return;
+
+      document.getElementById('config-modal').classList.remove('hidden');
+      renderCurrentResults();
+    }
+
+    function closeConfigModal() {
+      document.getElementById('config-modal').classList.add('hidden');
+    }
+
+    function triggerImportJSON() {
+      const confirmImport = confirm("ATENCION!: al importar un JSON de concurso se PERDERAN todos los datos registros, proceder?");
+      if (confirmImport) {
+        document.getElementById('file-input').click();
+      }
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.pilots || !data.classes) {
+            throw new Error('Invalid schema');
+          }
+
+          const tx = db.transaction(['pilots', 'classes', 'flights', 'metadata'], 'readwrite');
+          tx.objectStore('pilots').clear();
+          tx.objectStore('classes').clear();
+          tx.objectStore('flights').clear();
+          tx.objectStore('metadata').clear();
+
+          data.pilots.forEach(p => tx.objectStore('pilots').put(p));
+          data.classes.forEach(c => tx.objectStore('classes').put(c));
+          if (data.contestName) {
+            tx.objectStore('metadata').put({ key: 'contestName', value: data.contestName });
+          }
+
+          tx.oncomplete = () => {
+            alert('Datos de concurso importados.');
+            loadDataFromDB();
+            renderCurrentResults();
+          };
+        } catch (err) {
+          alert('Error al importar JSON, verifique el formato.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function exportResultsJSON() {
+      if (!db) return;
+      const tx = db.transaction(['pilots', 'classes', 'flights', 'metadata'], 'readonly');
+      const pilots = await new Promise(res => tx.objectStore('pilots').getAll().onsuccess = e => res(e.target.result));
+      const classes = await new Promise(res => tx.objectStore('classes').getAll().onsuccess = e => res(e.target.result));
+      const flights = await new Promise(res => tx.objectStore('flights').getAll().onsuccess = e => res(e.target.result));
+      const metaObj = await new Promise(res => tx.objectStore('metadata').get('contestName').onsuccess = e => res(e.target.result));
+
+      const exportData = {
+        contestName: metaObj ? metaObj.value : "Concurso Indoor",
+        exportedAt: new Date().toISOString(),
+        pilots: pilots,
+        classes: classes,
+        flights: flights
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contest_results_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function formatTimeSec(ms) {
+      if (!ms || ms <= 0) return '-';
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const tenths = Math.floor((ms % 1000) / 100);
+
+      const mm = String(minutes).padStart(2, '0');
+      const ss = String(seconds).padStart(2, '0');
+
+      return `${mm}:${ss}.${tenths}`;
+    }
+
+    async function renderCurrentResults() {
+      const container = document.getElementById('results-view');
+      container.innerHTML = '';
+
+      if (!db) return;
+      const tx = db.transaction(['pilots', 'classes', 'flights'], 'readonly');
+      const flights = await new Promise(res => tx.objectStore('flights').getAll().onsuccess = e => res(e.target.result));
+
+      if (cachedClasses.length === 0) {
+        container.innerHTML = '<div style="color: #888;">No hay clases ni datos de concurso cargados.</div>';
+        return;
+      }
+
+      cachedClasses.forEach(classObj => {
+        const classBlock = document.createElement('div');
+        classBlock.className = 'class-results-block';
+
+        const title = document.createElement('div');
+        title.className = 'class-title';
+        title.textContent = `Clase: ${classObj.name} (${classObj.code})`;
+        classBlock.appendChild(title);
+
+        const classPilots = cachedPilots.filter(p => classObj.pilotIds.includes(p.id));
+
+        const pilotSummaries = classPilots.map(pilot => {
+          const pilotFlights = {};
+          let totalMs = 0;
+
+          for (let f = 1; f <= classObj.maxFlights; f++) {
+            const rec = flights.find(fl => fl.classCode === classObj.code && fl.pilotId === pilot.id && fl.flightNum === f);
+            if (rec) {
+              pilotFlights[f] = rec.durationMs;
+              totalMs += rec.durationMs;
+            } else {
+              pilotFlights[f] = 0;
+            }
+          }
+
+          return {
+            pilot: pilot,
+            flights: pilotFlights,
+            totalMs: totalMs
+          };
+        });
+
+        pilotSummaries.sort((a, b) => b.totalMs - a.totalMs);
+
+        const table = document.createElement('table');
+        table.className = 'results-table';
+
+        let headerHTML = '<thead><tr><th>Piloto</th><th>Club/País</th>';
+        for (let f = 1; f <= classObj.maxFlights; f++) {
+          headerHTML += `<th>Vuelo ${f}</th>`;
+        }
+        headerHTML += '<th>Total</th></tr></thead>';
+
+        let bodyHTML = '<tbody>';
+        pilotSummaries.forEach(ps => {
+          const countryStr = ps.pilot.ccountry || '-';
+          bodyHTML += `<tr><td class="pilot-name-cell">${formatPilotName(ps.pilot)}</td><td>${countryStr}</td>`;
+          for (let f = 1; f <= classObj.maxFlights; f++) {
+            bodyHTML += `<td>${formatTimeSec(ps.flights[f])}</td>`;
+          }
+          bodyHTML += `<td class="total-cell">${formatTimeSec(ps.totalMs)}</td></tr>`;
+        });
+        bodyHTML += '</tbody>';
+
+        table.innerHTML = headerHTML + bodyHTML;
+        classBlock.appendChild(table);
+        container.appendChild(classBlock);
+      });
+    }
+
+    function updateDisplay(id) {
+      const sw = stopwatches[id];
+      const displayElem = document.getElementById(`display-${id}`);
+      displayElem.textContent = formatTime(sw.elapsedTime);
+    }
+
+    function toggleStopwatch(id) {
+      const swCard = document.getElementById(`sw-card-${id}`);
+      if (swCard.classList.contains('disabled')) return;
+
+      const sw = stopwatches[id];
+      const resetBtn = document.getElementById(`reset-${id}`);
+
+      if (sw.isRunning) {
+        clearInterval(sw.timerInterval);
+        sw.isRunning = false;
+        swCard.classList.remove('running');
+        resetBtn.disabled = false;
+        setRowInputControlsState(id, false);
+      } else {
+        sw.startTime = performance.now() - sw.elapsedTime;
+        sw.timerInterval = setInterval(() => {
+          sw.elapsedTime = performance.now() - sw.startTime;
+          updateDisplay(id);
+        }, 50);
+        sw.isRunning = true;
+        swCard.classList.add('running');
+        resetBtn.disabled = true;
+        setRowInputControlsState(id, true);
+      }
+      updateCogState();
+    }
+
+    function resetStopwatch(id) {
+      const sw = stopwatches[id];
+      if (sw.isRunning) return;
+      sw.elapsedTime = 0;
+      updateDisplay(id);
+
+      document.getElementById(`class-${id}`).value = '';
+      onClassChange(id);
+    }
+
+    function updateCogState() {
+      const cogBtn = document.getElementById('cog-btn');
+      const hasRunningTimer = Object.values(stopwatches).some(sw => sw.isRunning);
+      if (hasRunningTimer) {
+        cogBtn.classList.add('disabled');
+      } else {
+        cogBtn.classList.remove('disabled');
+      }
+    }
+
+    function startAutoBlurTimer() {
+      clearAutoBlurTimer();
+      inputBlurTimer = setTimeout(() => {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+          document.activeElement.blur();
+        }
+      }, AUTO_BLUR_TIMEOUT_MS);
+    }
+
+    function clearAutoBlurTimer() {
+      if (inputBlurTimer) {
+        clearTimeout(inputBlurTimer);
+        inputBlurTimer = null;
+      }
+    }
+
+    document.querySelectorAll('.app-select').forEach(select => {
+      select.addEventListener('focus', () => startAutoBlurTimer());
+      select.addEventListener('change', () => startAutoBlurTimer());
+      select.addEventListener('blur', () => clearAutoBlurTimer());
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const hasRunningTimer = Object.values(stopwatches).some(sw => sw.isRunning);
+
+      if (hasRunningTimer) {
+        if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+          e.preventDefault();
+          return;
+        }
+      }
+
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+        return;
+      }
+
+      if (['1', '2', '3', '4'].includes(e.key)) {
+        const id = parseInt(e.key, 10);
+        toggleStopwatch(id);
+      }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+      const hasRunningTimer = Object.values(stopwatches).some(sw => sw.isRunning);
+      if (hasRunningTimer) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initDB();
+      await loadDataFromDB();
+    });
+
+    let currentInstalledVersion = null;
+    let newWorkerWaiting = null;
+
+    function queryActiveSWVersion(registration) {
+      return new Promise((resolve) => {
+        const activeWorker = registration.active || navigator.serviceWorker.controller;
+        if (!activeWorker) return resolve(null);
+
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = (event) => {
+          if (event.data && event.data.version) {
+            resolve(event.data.version);
+          } else {
+            resolve(null);
+          }
+        };
+        activeWorker.postMessage({ type: 'GET_VERSION' }, [messageChannel.port2]);
+      });
+    }
+
+    async function checkAppVersion(registration) {
+      const installedVer = await queryActiveSWVersion(registration);
+      if (installedVer) {
+        currentInstalledVersion = installedVer;
+        document.getElementById('app-version-display').textContent = `(${currentInstalledVersion})`;
+      } else {
+        document.getElementById('app-version-display').textContent = '';
+      }
+
+      try {
+        const response = await fetch('./sw.js?cachebust=' + Date.now(), { cache: 'no-store' });
+        const text = await response.text();
+        const match = text.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+
+        if (match && match[1]) {
+          const serverVersion = match[1];
+          if (currentInstalledVersion && serverVersion !== currentInstalledVersion) {
+            document.getElementById('update-banner').classList.remove('hidden');
+          } else {
+            document.getElementById('update-banner').classList.add('hidden');
+          }
+        }
+      } catch (err) {
+        console.warn('Network update check failed:', err);
+      }
+
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+        installingWorker.addEventListener('statechange', () => {
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorkerWaiting = installingWorker;
+            document.getElementById('update-banner').classList.remove('hidden');
+          }
+        });
+      });
+    }
+
+    function applyAppUpdate() {
+      if (newWorkerWaiting) {
+        newWorkerWaiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        navigator.serviceWorker.ready.then((reg) => {
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          } else {
+            window.location.reload();
+          }
+        });
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js');
+          registration.update();
+          checkAppVersion(registration);
+        } catch (err) {
+          console.error('Service Worker registration failed:', err);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "contestName": "79 Nacional de Aeromodelismo modalidad Indoor 2026",
+  "pilots": [
+    { "id": 1, "lastName": "Formento", "surName": "Pedro", "ccountry": "ARG" },
+    { "id": 2, "lastName": "Gandolfo", "surName": "Joaquín", "ccountry": "ARG" },
+    { "id": 3, "lastName": "Del Pato", "surName": "Sergio", "ccountry": "ARG" },
+    { "id": 4, "lastName": "Dunky", "surName": "Elvio", "ccountry": "ARG" },
+    { "id": 5, "lastName": "Cavaglia", "surName": "Marcelo", "ccountry": "ARG" },
+    { "id": 6, "lastName": "Medina", "surName": "Ulises", "ccountry": "URU" },
+    { "id": 7, "lastName": "Boiero", "surName": "Roberto", "ccountry": "ARG" },
+    { "id": 8, "lastName": "Leys", "surName": "José Luis", "ccountry": "ARG" },
+    { "id": 9, "lastName": "Gimenez", "surName": "Ernesto", "ccountry": "URU" }
+  ],
+  "classes": [
+    {
+      "code": "F1D",
+      "name": "F1D",
+      "maxFlights": 6,
+      "pilotIds": [1,2,3,6]
+    },
+    {
+      "code": "F1N",
+      "name": "F1N",
+      "maxFlights": 5,
+      "pilotIds": [1,2,4,5,6,9]
+    },
+    {
+      "code": "FAR",
+      "name": "FAR",
+      "maxFlights": 5,
+      "pilotIds": [1,2,4,5,6,7,9]
+    }
+  ]
+}
