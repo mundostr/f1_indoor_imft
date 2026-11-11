@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.0.1';
+const APP_VERSION = 'v1.1.0';
 const CACHE_NAME = `imft-${APP_VERSION}`;
 
 const ASSETS_TO_CACHE = [
